@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Copy, Users, UserPlus, LogOut, Crown, User, Check } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Copy, Users, UserPlus, LogOut, Crown, User, Check, Building2, Settings } from 'lucide-react';
 
-// --- เพิ่ม Firebase ---
+// --- Firebase ---
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get, remove, onValue, off } from 'firebase/database';
+
+// --- Import LocationSettings ---
+import LocationSettings from './lcoationSettings';
 
 const firebaseConfig = {
 	apiKey: "AIzaSyD6GeERDZY8FQnRkr4oT4AqQIdOhypn-V0",
@@ -32,6 +35,10 @@ const PeerJSRoomVideoCall = () => {
 	const [myPeerId, setMyPeerId] = useState('');
 	const [copied, setCopied] = useState(false);
 
+	// --- สถานที่ที่เลือก ---
+	const [selectedLocation, setSelectedLocation] = useState(null);
+	const [showLocationSettings, setShowLocationSettings] = useState(false);
+
 	const localVideoRef = useRef(null);
 	const peerRef = useRef(null);
 	const localStreamRef = useRef(null);
@@ -41,9 +48,21 @@ const PeerJSRoomVideoCall = () => {
 		hostPeerId: null,
 		participants: []
 	});
-
-	// เพิ่ม ref สำหรับ Firebase listener
 	const roomHostListenerRef = useRef(null);
+
+	// โหลดสถานที่ที่เลือกไว้จาก localStorage
+	useEffect(() => {
+		const saved = localStorage.getItem('selectedLocation');
+		if (saved) {
+			try {
+				const loc = JSON.parse(saved);
+				setSelectedLocation(loc);
+				console.log('โหลดสถานที่ที่เลือกแล้ว:', loc.name, 'ID:', loc.id);
+			} catch (e) {
+				console.error('Error parsing selectedLocation:', e);
+			}
+		}
+	}, []);
 
 	useEffect(() => {
 		const script = document.createElement('script');
@@ -85,7 +104,7 @@ const PeerJSRoomVideoCall = () => {
 					{ urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
 					{ urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
 					{ urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-			]
+				]
 			},
 			debug: 2
 		});
@@ -288,6 +307,106 @@ const PeerJSRoomVideoCall = () => {
 		}
 	};
 
+
+
+	// const generateRoomId = () => {
+	// 	const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+	// 	setRoomId(id);
+	// };
+
+	// const joinRoom = async () => {
+	// 	if (!roomId || !userName) {
+	// 		setError('กรุณากรอกรหัสห้องและชื่อของคุณ');
+	// 		return;
+	// 	}
+
+	// 	try {
+	// 		setConnectionStatus('connecting');
+	// 		setError('');
+
+	// 		const stream = await navigator.mediaDevices.getUserMedia({
+	// 			video: true,
+	// 			audio: true
+	// 		});
+
+	// 		localStreamRef.current = stream;
+	// 		if (localVideoRef.current) {
+	// 			localVideoRef.current.srcObject = stream;
+	// 		}
+
+	// 		const roomRef = ref(database, `rooms/${roomId}`);
+
+	// 		const snapshot = await get(roomRef);
+	// 		const hostPeerId = snapshot.val()?.hostPeerId;
+
+	// 		if (!hostPeerId || hostPeerId === myPeerId) {
+	// 			console.log('Creating new room as host');
+	// 			await set(roomRef, {
+	// 				hostPeerId: myPeerId,
+	// 				createdAt: Date.now()
+	// 			});
+
+	// 			roomStateRef.current = {
+	// 				roomId,
+	// 				hostPeerId: myPeerId,
+	// 				participants: [{
+	// 					peerId: myPeerId,
+	// 					name: userName,
+	// 					isHost: true
+	// 				}]
+	// 			};
+
+	// 			setIsHost(true);
+	// 			setParticipants(roomStateRef.current.participants);
+	// 			setIsInRoom(true);
+	// 			setConnectionStatus('waiting');
+
+	// 		} else {
+	// 			console.log('Joining existing room, host:', hostPeerId);
+	// 			setIsHost(false);
+
+	// 			const dataConn = peerRef.current.connect(hostPeerId, {
+	// 				reliable: true,
+	// 				metadata: { name: userName, roomId }
+	// 			});
+
+	// 			setupDataConnection(dataConn);
+
+	// 			dataConn.on('open', () => {
+	// 				console.log('Connected to host, requesting room state');
+
+	// 				dataConn.send({
+	// 					type: 'join-request',
+	// 					payload: {
+	// 						peerId: myPeerId,
+	// 						name: userName,
+	// 						isHost: false
+	// 					}
+	// 				});
+
+	// 				callPeer(hostPeerId, 'Host');
+	// 			});
+
+	// 			setIsInRoom(true);
+	// 			setConnectionStatus('connected');
+	// 		}
+
+	// 		// ติดตามสถานะ host (ถ้า host หาย = ปิดห้อง)
+	// 		roomHostListenerRef.current = roomRef;
+	// 		onValue(roomRef, (snap) => {
+	// 			if (!snap.exists() && isInRoom) {
+	// 				console.log('Room deleted by host');
+	// 				setError('Host ปิดห้องแล้ว');
+	// 				setTimeout(() => leaveRoom(false), 2000);
+	// 			}
+	// 		});
+
+	// 	} catch (err) {
+	// 		console.error('Error joining room:', err);
+	// 		setError('ไม่สามารถเข้าถึงกล้องหรือไมค์: ' + err.message);
+	// 		setConnectionStatus('ready');
+	// 	}
+	// };
 	const generateRoomId = () => {
 		const id = Math.random().toString(36).substring(2, 8).toUpperCase();
 		setRoomId(id);
@@ -296,6 +415,11 @@ const PeerJSRoomVideoCall = () => {
 	const joinRoom = async () => {
 		if (!roomId || !userName) {
 			setError('กรุณากรอกรหัสห้องและชื่อของคุณ');
+			return;
+		}
+
+		if (!selectedLocation) {
+			setError('กรุณาเลือกสถานที่ก่อนเข้าร่วมหรือสร้างห้อง');
 			return;
 		}
 
@@ -313,16 +437,19 @@ const PeerJSRoomVideoCall = () => {
 				localVideoRef.current.srcObject = stream;
 			}
 
-			const roomRef = ref(database, `rooms/${roomId}`);
+			// ใช้ path ตาม locationId
+			const roomPath = `${selectedLocation.id}/rooms/${roomId}`;
+			const roomRef = ref(database, roomPath);
 
 			const snapshot = await get(roomRef);
 			const hostPeerId = snapshot.val()?.hostPeerId;
 
 			if (!hostPeerId || hostPeerId === myPeerId) {
-				console.log('Creating new room as host');
+				console.log('Creating new room as host under location:', selectedLocation.id);
 				await set(roomRef, {
 					hostPeerId: myPeerId,
-					createdAt: Date.now()
+					createdAt: Date.now(),
+					locationName: selectedLocation.name // เก็บชื่อสถานที่ไว้ด้วย (optional)
 				});
 
 				roomStateRef.current = {
@@ -353,7 +480,6 @@ const PeerJSRoomVideoCall = () => {
 
 				dataConn.on('open', () => {
 					console.log('Connected to host, requesting room state');
-
 					dataConn.send({
 						type: 'join-request',
 						payload: {
@@ -370,7 +496,7 @@ const PeerJSRoomVideoCall = () => {
 				setConnectionStatus('connected');
 			}
 
-			// ติดตามสถานะ host (ถ้า host หาย = ปิดห้อง)
+			// Listener สำหรับการปิดห้อง
 			roomHostListenerRef.current = roomRef;
 			onValue(roomRef, (snap) => {
 				if (!snap.exists() && isInRoom) {
@@ -575,17 +701,38 @@ const PeerJSRoomVideoCall = () => {
 	const leaveRoom = async (notifyOthers = true) => {
 		if (notifyOthers) {
 			if (isHost) {
-				console.log('Host leaving, closing room');
-				// ลบห้องออกจาก Firebase
-				const roomRef = ref(database, `rooms/${roomId}`);
-				await remove(roomRef);
+				console.log('Host กำลังปิดห้องและลบข้อมูลห้องออกจาก Firebase');
+
+				// ตรวจสอบว่ามี selectedLocation หรือไม่
+				const savedLocation = localStorage.getItem('selectedLocation');
+				let roomPath = `rooms/${roomId}`; // fallback เก่า
+
+				if (savedLocation) {
+					try {
+						const loc = JSON.parse(savedLocation);
+						roomPath = `${loc.id}/rooms/${roomId}`;
+						console.log('ลบห้องภายใต้ location:', loc.name, 'Path:', roomPath);
+					} catch (e) {
+						console.warn('ไม่สามารถ parse selectedLocation ได้ ใช้ path เก่า');
+					}
+				} else {
+					console.log('ไม่มี location ที่เลือก ใช้ path เก่า:', roomPath);
+				}
+
+				try {
+					const roomRef = ref(database, roomPath);
+					await remove(roomRef);
+					console.log('ลบห้องสำเร็จ:', roomPath);
+				} catch (err) {
+					console.error('เกิดข้อผิดพลาดในการลบห้อง:', err);
+				}
 
 				broadcastToAll({
 					type: 'host-leaving',
 					payload: { roomId }
 				});
 			} else {
-				console.log('Client leaving room');
+				console.log('Client ออกจากห้อง');
 
 				sendToHost({
 					type: 'participant-left',
@@ -594,6 +741,7 @@ const PeerJSRoomVideoCall = () => {
 			}
 		}
 
+		// ส่วน cleanup เดิม (หยุด stream, ปิด connection ฯลฯ)
 		if (localStreamRef.current) {
 			localStreamRef.current.getTracks().forEach(track => track.stop());
 		}
@@ -656,110 +804,151 @@ const PeerJSRoomVideoCall = () => {
 
 	if (!isInRoom) {
 		return (
-			
-			<div className="fixed inset-0 bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
+			<>
+				<div className="fixed inset-0 bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
+					<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-auto h-auto max-h-full overflow-y-auto">
 
-				<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-auto h-auto max-h-full overflow-y-auto">
-
-					<div className="text-center mb-8">
-						<div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
-							<Users className="w-8 h-8 text-white" />
-						</div>
-						<h1 className="text-3xl font-bold text-gray-800 mb-2">PeerJS Room Call</h1>
-						<p className="text-gray-600">P2P • ไม่ต้องเซิร์ฟเวอร์ • ข้ามเครือข่ายได้</p>
-					</div>
-
-					{connectionStatus === 'disconnected' && (
-						<div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-							<div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-							<span>กำลังเชื่อมต่อ PeerJS Server...</span>
-						</div>
-					)}
-
-					{error && (
-						<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-							{error}
-						</div>
-					)}
-
-					{connectionStatus === 'ready' && (
-						<div className="space-y-4">
-							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-2">
-									ชื่อของคุณ
-								</label>
-								<input
-									type="text"
-									value={userName}
-									onChange={(e) => setUserName(e.target.value)}
-									placeholder="กรอกชื่อของคุณ"
-									className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-								/>
+						<div className="text-center mb-8">
+							<div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
+								<Users className="w-8 h-8 text-white" />
 							</div>
+							<h1 className="text-3xl font-bold text-gray-800 mb-2">PeerJS Room Call</h1>
+							<p className="text-gray-600">P2P • ไม่ต้องเซิร์ฟเวอร์ • ข้ามเครือข่ายได้</p>
+						</div>
 
-							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-2">
-									รหัสห้อง
-								</label>
-								<div className="flex gap-2">
+						{/* แสดงสถานที่ที่เลือก */}
+						{selectedLocation ? (
+							<div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<Building2 className="w-8 h-8 text-indigo-600" />
+									<div>
+										<p className="text-sm text-indigo-700 font-medium">สถานที่ปัจจุบัน</p>
+										<p className="font-semibold text-indigo-900">{selectedLocation.name}</p>
+									</div>
+								</div>
+								<button
+									onClick={() => setShowLocationSettings(true)}
+									className="text-indigo-600 hover:text-indigo-800 transition"
+								>
+									<Settings className="w-5 h-5" />
+								</button>
+							</div>
+						) : (
+							<div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<Building2 className="w-8 h-8 text-yellow-600" />
+									<p className="text-yellow-800 font-medium">ยังไม่ได้เลือกสถานที่</p>
+								</div>
+								<button
+									onClick={() => setShowLocationSettings(true)}
+									className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+								>
+									<Settings className="w-4 h-4" />
+									ตั้งค่าสถานที่
+								</button>
+							</div>
+						)}
+
+						{connectionStatus === 'disconnected' && (
+							<div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+								<div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+								<span>กำลังเชื่อมต่อ PeerJS Server...</span>
+							</div>
+						)}
+
+						{error && (
+							<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+								{error}
+							</div>
+						)}
+
+						{connectionStatus === 'ready' && (
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-2">
+										ชื่อของคุณ
+									</label>
 									<input
 										type="text"
-										value={roomId}
-										onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-										placeholder="กรอกหรือสร้างรหัสห้อง"
-										className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition uppercase font-mono"
+										value={userName}
+										onChange={(e) => setUserName(e.target.value)}
+										placeholder="กรอกชื่อของคุณ"
+										className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
 									/>
-									<button
-										onClick={generateRoomId}
-										className="px-4 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg transition font-medium whitespace-nowrap"
-									>
-										สร้าง
-									</button>
 								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-2">
+										รหัสห้อง
+									</label>
+									<div className="flex gap-2">
+										<input
+											type="text"
+											value={roomId}
+											onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+											placeholder="กรอกหรือสร้างรหัสห้อง"
+											className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition uppercase font-mono"
+										/>
+										<button
+											onClick={generateRoomId}
+											className="px-4 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg transition font-medium whitespace-nowrap"
+										>
+											สร้าง
+										</button>
+									</div>
+								</div>
+
+								<button
+									onClick={joinRoom}
+									disabled={connectionStatus === 'connecting' || !selectedLocation}
+									className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+								>
+									<UserPlus className="w-5 h-5" />
+									{connectionStatus === 'connecting' ? 'กำลังเข้าร่วม...' : 'เข้าร่วมห้อง'}
+								</button>
+							</div>
+						)}
+
+						{/* ข้อมูลเดิม */}
+						<div className="mt-6 space-y-3">
+							<div className="p-4 bg-green-50 rounded-lg border border-green-200">
+								<p className="text-sm text-green-800 font-semibold mb-2 flex items-center gap-2">
+									<Check className="w-4 h-4" />
+									ระบบห้องอัตโนมัติ:
+								</p>
+								<ul className="text-sm text-green-700 space-y-1 ml-6 list-disc">
+									<li>รหัสใหม่ = สร้างห้อง (Host)</li>
+									<li>รหัสเดิม = เข้าร่วม (Client)</li>
+									<li>Host ออก = ปิดห้อง</li>
+									<li>Client ออก = ออกจากห้อง</li>
+								</ul>
 							</div>
 
-							<button
-								onClick={joinRoom}
-								disabled={connectionStatus === 'connecting'}
-								className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-							>
-								<UserPlus className="w-5 h-5" />
-								{connectionStatus === 'connecting' ? 'กำลังเข้าร่วม...' : 'เข้าร่วมห้อง'}
-							</button>
-						</div>
-					)}
-
-					<div className="mt-6 space-y-3">
-						<div className="p-4 bg-green-50 rounded-lg border border-green-200">
-							<p className="text-sm text-green-800 font-semibold mb-2 flex items-center gap-2">
-								<Check className="w-4 h-4" />
-								ระบบห้องอัตโนมัติ:
-							</p>
-							<ul className="text-sm text-green-700 space-y-1 ml-6 list-disc">
-								<li>รหัสใหม่ = สร้างห้อง (Host)</li>
-								<li>รหัสเดิม = เข้าร่วม (Client)</li>
-								<li>Host ออก = ปิดห้อง</li>
-								<li>Client ออก = ออกจากห้อง</li>
-							</ul>
-						</div>
-
-						<div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-							<p className="text-sm text-purple-800">
-								<strong>คุณสมบัติ:</strong> ใช้ Firebase RTDB แทน localStorage
-							</p>
+							<div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+								<p className="text-sm text-purple-800">
+									<strong>คุณสมบัติ:</strong> ห้องแยกตามสถานที่ที่เลือก
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
+
+				{/* Modal ตั้งค่าสถานที่ */}
+				{showLocationSettings && (
+					<LocationSettings
+						onClose={() => setShowLocationSettings(false)}
+						onSelectLocation={(location) => {
+							setSelectedLocation(location);
+							localStorage.setItem('selectedLocation', JSON.stringify(location));
+						}}
+					/>
+				)}
+			</>
 		);
 	}
 
 	return (
-		// UI ในห้องเหมือนเดิมทุกอย่าง...
-		// <div className="min-h-screen bg-gray-900 flex flex-col">
 		<div className="fixed inset-0 bg-gray-900 flex flex-col">
-			{/* ... ส่วนที่เหลือเหมือนเดิม 100% ... */}
-			{/* (ไม่มีการเปลี่ยนแปลงใด ๆ) */}
 			<div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
 				<div className="flex items-center justify-between flex-wrap gap-4">
 					<div className="flex items-center gap-4">
@@ -802,8 +991,7 @@ const PeerJSRoomVideoCall = () => {
 								{participants.length} คน
 							</span>
 						</div>
-						<div className={`w-2 h-2 rounded-full ${participants.length > 1 ? 'bg-green-500' : 'bg-yellow-500'
-							}`} />
+						<div className={`w-2 h-2 rounded-full ${participants.length > 1 ? 'bg-green-500' : 'bg-yellow-500'}`} />
 						<span className="text-gray-300 text-sm">
 							{participants.length > 1 ? 'กำลังสนทนา' : 'รอผู้ใช้อื่น...'}
 						</span>
@@ -811,16 +999,22 @@ const PeerJSRoomVideoCall = () => {
 				</div>
 			</div>
 
+			{/* แสดงสถานที่ในห้อง */}
+			{selectedLocation && (
+				<div className="bg-indigo-900 text-white px-6 py-2 text-center">
+					<div className="flex items-center justify-center gap-2">
+						<Building2 className="w-5 h-5" />
+						<span className="font-medium">{selectedLocation.name}</span>
+					</div>
+				</div>
+			)}
+
+			{/* ส่วนวิดีโอและ control เดิมทั้งหมด */}
 			<div className="flex-1 p-6 overflow-auto">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+					{/* Local video */}
 					<div className="relative bg-gray-800 rounded-2xl overflow-hidden shadow-2xl min-h-[300px]">
-						<video
-							ref={localVideoRef}
-							autoPlay
-							playsInline
-							muted
-							className="w-full h-full object-cover mirror"
-						/>
+						<video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover mirror" />
 						{!isVideoEnabled && (
 							<div className="absolute inset-0 flex items-center justify-center bg-gray-900">
 								<VideoOff className="w-16 h-16 text-gray-600" />
@@ -843,43 +1037,18 @@ const PeerJSRoomVideoCall = () => {
 				</div>
 			</div>
 
+			{/* Control bar เดิม */}
 			<div className="bg-gray-800 border-t border-gray-700 px-6 py-6">
+				{/* ... control buttons เดิม ... */}
 				<div className="flex items-center justify-center gap-4 flex-wrap">
-					<button
-						onClick={toggleVideo}
-						className={`p-4 rounded-full transition ${isVideoEnabled
-							? 'bg-gray-700 hover:bg-gray-600'
-							: 'bg-red-600 hover:bg-red-700'
-							}`}
-						title={isVideoEnabled ? 'ปิดกล้อง' : 'เปิดกล้อง'}
-					>
-						{isVideoEnabled ? (
-							<Video className="w-6 h-6 text-white" />
-						) : (
-							<VideoOff className="w-6 h-6 text-white" />
-						)}
+					{/* toggleVideo, toggleAudio, leaveRoom */}
+					<button onClick={toggleVideo} className={`p-4 rounded-full transition ${isVideoEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}>
+						{isVideoEnabled ? <Video className="w-6 h-6 text-white" /> : <VideoOff className="w-6 h-6 text-white" />}
 					</button>
-
-					<button
-						onClick={toggleAudio}
-						className={`p-4 rounded-full transition ${isAudioEnabled
-							? 'bg-gray-700 hover:bg-gray-600'
-							: 'bg-red-600 hover:bg-red-700'
-							}`}
-						title={isAudioEnabled ? 'ปิดไมค์' : 'เปิดไมค์'}
-					>
-						{isAudioEnabled ? (
-							<Mic className="w-6 h-6 text-white" />
-						) : (
-							<MicOff className="w-6 h-6 text-white" />
-						)}
+					<button onClick={toggleAudio} className={`p-4 rounded-full transition ${isAudioEnabled ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}>
+						{isAudioEnabled ? <Mic className="w-6 h-6 text-white" /> : <MicOff className="w-6 h-6 text-white" />}
 					</button>
-
-					<button
-						onClick={() => leaveRoom(true)}
-						className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition flex items-center gap-2 px-6"
-						title={isHost ? 'ปิดห้อง' : 'ออกจากห้อง'}
-					>
+					<button onClick={() => leaveRoom(true)} className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition flex items-center gap-2 px-6">
 						{isHost ? (
 							<>
 								<PhoneOff className="w-6 h-6 text-white" />
@@ -894,6 +1063,7 @@ const PeerJSRoomVideoCall = () => {
 					</button>
 				</div>
 
+				{/* ข้อความเดิม */}
 				{isHost && participants.length === 1 && (
 					<div className="mt-4 text-center">
 						<p className="text-gray-400 text-sm">
@@ -901,23 +1071,11 @@ const PeerJSRoomVideoCall = () => {
 						</p>
 					</div>
 				)}
-
-				{isHost && participants.length > 1 && (
-					<div className="mt-4 text-center">
-						<p className="text-yellow-400 text-sm">
-							คุณเป็น Host - เมื่อกด "ปิดห้อง" จะปิดการสนทนาสำหรับทุกคน
-						</p>
-					</div>
-				)}
 			</div>
 
 			<style>{`
-        .mirror {
-          transform: scaleX(-1);
-        }
-        #remote-videos > div {
-          min-height: 300px;	 
-        }
+        .mirror { transform: scaleX(-1); }
+        #remote-videos > div { min-height: 300px; }
       `}</style>
 		</div>
 	);

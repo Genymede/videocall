@@ -85,11 +85,7 @@ const PeerJSRoomVideoCall = () => {
 					{ urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
 					{ urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
 					{ urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-
-					// New: Xirsys (Often used for additional TCP relay flexibility)
-					// Note: Xirsys credentials usually require a dynamic API call, 
-					// but we include common public servers for maximum compatibility.
-				]
+			]
 			},
 			debug: 2
 		});
@@ -658,18 +654,11 @@ const PeerJSRoomVideoCall = () => {
 		setTimeout(() => setCopied(false), 2000);
 	};
 
-	// UI ส่วนที่เหลือเหมือนเดิมทุกประการ...
-	// (ไม่มีการเปลี่ยนแปลงใด ๆ ด้านล่างนี้)
-
 	if (!isInRoom) {
 		return (
-			// เปลี่ยนจาก min-h-screen min-w-screen เป็น h-screen w-screen
-			// ใช้ overflow-hidden เพื่อป้องกัน scroll โดยสมบูรณ์
-			// ลบ p-4 ออก เพราะ padding ด้านนอกทำให้ล้นได้ง่าย
-			// <div className="h-screen w-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
+			
 			<div className="fixed inset-0 bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
-				{/* เพิ่ม max-h-full และ overflow-y-auto ให้ card กรณีเนื้อหายาวเกิน (แต่ในกรณีนี้ไม่จำเป็นเพราะเนื้อหาไม่ยาวมาก) */}
-				{/* ใช้ w-full max-w-md แต่เพิ่ม mx-auto เพื่อ center แนวนอนแน่นอน */}
+
 				<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-auto h-auto max-h-full overflow-y-auto">
 
 					<div className="text-center mb-8">

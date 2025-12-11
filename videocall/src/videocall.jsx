@@ -73,24 +73,24 @@ const PeerJSRoomVideoCall = () => {
 	const initializePeer = () => {
 		const peer = new window.Peer({
 			config: {
-                iceServers: [
-                    // Google STUN (มาตรฐาน)
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    
-                    // Twilio STUN (เชื่อถือได้)
-                    { urls: 'stun:global.stun.twilio.com:3478' }, 
+				iceServers: [
+					// Google STUN (มาตรฐาน)
+					{ urls: 'stun:stun.l.google.com:19302' },
+					{ urls: 'stun:stun1.l.google.com:19302' },
 
-                    // OpenRelay TURN (Creds provided) - ใช้เป็นตัวเลือก Relay หลัก
-                    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-                    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-                    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }, 
-                    
-                    // New: Xirsys (Often used for additional TCP relay flexibility)
-                    // Note: Xirsys credentials usually require a dynamic API call, 
-                    // but we include common public servers for maximum compatibility.
-                ]
-            },
+					// Twilio STUN (เชื่อถือได้)
+					{ urls: 'stun:global.stun.twilio.com:3478' },
+
+					// OpenRelay TURN (Creds provided) - ใช้เป็นตัวเลือก Relay หลัก
+					{ urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+					{ urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+					{ urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+
+					// New: Xirsys (Often used for additional TCP relay flexibility)
+					// Note: Xirsys credentials usually require a dynamic API call, 
+					// but we include common public servers for maximum compatibility.
+				]
+			},
 			debug: 2
 		});
 
@@ -546,7 +546,7 @@ const PeerJSRoomVideoCall = () => {
 
 			videoElement.srcObject = stream;
 			videoElement.onloadedmetadata = () => {
-						videoElement.play().catch(e => console.warn("Remote Play Error (Autoplay Blocked):", e));
+				videoElement.play().catch(e => console.warn("Remote Play Error (Autoplay Blocked):", e));
 			};
 			console.log('Stream assigned to video element for:', peerId);
 		} else {
@@ -663,8 +663,15 @@ const PeerJSRoomVideoCall = () => {
 
 	if (!isInRoom) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center p-4">
-				<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+			// เปลี่ยนจาก min-h-screen min-w-screen เป็น h-screen w-screen
+			// ใช้ overflow-hidden เพื่อป้องกัน scroll โดยสมบูรณ์
+			// ลบ p-4 ออก เพราะ padding ด้านนอกทำให้ล้นได้ง่าย
+			// <div className="h-screen w-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
+			<div className="fixed inset-0 bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center overflow-hidden">
+				{/* เพิ่ม max-h-full และ overflow-y-auto ให้ card กรณีเนื้อหายาวเกิน (แต่ในกรณีนี้ไม่จำเป็นเพราะเนื้อหาไม่ยาวมาก) */}
+				{/* ใช้ w-full max-w-md แต่เพิ่ม mx-auto เพื่อ center แนวนอนแน่นอน */}
+				<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-auto h-auto max-h-full overflow-y-auto">
+
 					<div className="text-center mb-8">
 						<div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
 							<Users className="w-8 h-8 text-white" />
@@ -715,7 +722,7 @@ const PeerJSRoomVideoCall = () => {
 									/>
 									<button
 										onClick={generateRoomId}
-										className="px-4 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg transition font-medium"
+										className="px-4 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg transition font-medium whitespace-nowrap"
 									>
 										สร้าง
 									</button>
@@ -733,7 +740,6 @@ const PeerJSRoomVideoCall = () => {
 						</div>
 					)}
 
-					{/* ส่วนข้อมูลเพิ่มเติมเหมือนเดิม */}
 					<div className="mt-6 space-y-3">
 						<div className="p-4 bg-green-50 rounded-lg border border-green-200">
 							<p className="text-sm text-green-800 font-semibold mb-2 flex items-center gap-2">
@@ -748,18 +754,6 @@ const PeerJSRoomVideoCall = () => {
 							</ul>
 						</div>
 
-						{/* <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-							<p className="text-sm text-blue-800 font-semibold mb-2">
-								ข้ามเครือข่ายได้จริง:
-							</p>
-							<ul className="text-sm text-blue-700 space-y-1 ml-6 list-disc">
-								<li>PeerJS Cloud Server (ฟรี)</li>
-								<li>STUN + TURN Servers (ฟรี)</li>
-								<li>ไม่ต้องมี Public IP</li>
-								<li>ทำงานข้ามประเทศได้</li>
-							</ul>
-						</div> */}
-
 						<div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
 							<p className="text-sm text-purple-800">
 								<strong>คุณสมบัติ:</strong> ใช้ Firebase RTDB แทน localStorage
@@ -773,7 +767,8 @@ const PeerJSRoomVideoCall = () => {
 
 	return (
 		// UI ในห้องเหมือนเดิมทุกอย่าง...
-		<div className="min-h-screen bg-gray-900 flex flex-col">
+		// <div className="min-h-screen bg-gray-900 flex flex-col">
+		<div className="fixed inset-0 bg-gray-900 flex flex-col">
 			{/* ... ส่วนที่เหลือเหมือนเดิม 100% ... */}
 			{/* (ไม่มีการเปลี่ยนแปลงใด ๆ) */}
 			<div className="bg-gray-800 border-b border-gray-700 px-6 py-4">

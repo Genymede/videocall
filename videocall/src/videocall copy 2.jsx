@@ -403,6 +403,106 @@ const PeerJSRoomVideoCall = () => {
 		}
 	};
 
+
+
+	// const generateRoomId = () => {
+	// 	const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+	// 	setRoomId(id);
+	// };
+
+	// const joinRoom = async () => {
+	// 	if (!roomId || !userName) {
+	// 		setError('กรุณากรอกรหัสห้องและชื่อของคุณ');
+	// 		return;
+	// 	}
+
+	// 	try {
+	// 		setConnectionStatus('connecting');
+	// 		setError('');
+
+	// 		const stream = await navigator.mediaDevices.getUserMedia({
+	// 			video: true,
+	// 			audio: true
+	// 		});
+
+	// 		localStreamRef.current = stream;
+	// 		if (localVideoRef.current) {
+	// 			localVideoRef.current.srcObject = stream;
+	// 		}
+
+	// 		const roomRef = ref(database, `rooms/${roomId}`);
+
+	// 		const snapshot = await get(roomRef);
+	// 		const hostPeerId = snapshot.val()?.hostPeerId;
+
+	// 		if (!hostPeerId || hostPeerId === myPeerId) {
+	// 			console.log('Creating new room as host');
+	// 			await set(roomRef, {
+	// 				hostPeerId: myPeerId,
+	// 				createdAt: Date.now()
+	// 			});
+
+	// 			roomStateRef.current = {
+	// 				roomId,
+	// 				hostPeerId: myPeerId,
+	// 				participants: [{
+	// 					peerId: myPeerId,
+	// 					name: userName,
+	// 					isHost: true
+	// 				}]
+	// 			};
+
+	// 			setIsHost(true);
+	// 			setParticipants(roomStateRef.current.participants);
+	// 			setIsInRoom(true);
+	// 			setConnectionStatus('waiting');
+
+	// 		} else {
+	// 			console.log('Joining existing room, host:', hostPeerId);
+	// 			setIsHost(false);
+
+	// 			const dataConn = peerRef.current.connect(hostPeerId, {
+	// 				reliable: true,
+	// 				metadata: { name: userName, roomId }
+	// 			});
+
+	// 			setupDataConnection(dataConn);
+
+	// 			dataConn.on('open', () => {
+	// 				console.log('Connected to host, requesting room state');
+
+	// 				dataConn.send({
+	// 					type: 'join-request',
+	// 					payload: {
+	// 						peerId: myPeerId,
+	// 						name: userName,
+	// 						isHost: false
+	// 					}
+	// 				});
+
+	// 				callPeer(hostPeerId, 'Host');
+	// 			});
+
+	// 			setIsInRoom(true);
+	// 			setConnectionStatus('connected');
+	// 		}
+
+	// 		// ติดตามสถานะ host (ถ้า host หาย = ปิดห้อง)
+	// 		roomHostListenerRef.current = roomRef;
+	// 		onValue(roomRef, (snap) => {
+	// 			if (!snap.exists() && isInRoom) {
+	// 				console.log('Room deleted by host');
+	// 				setError('Host ปิดห้องแล้ว');
+	// 				setTimeout(() => leaveRoom(false), 2000);
+	// 			}
+	// 		});
+
+	// 	} catch (err) {
+	// 		console.error('Error joining room:', err);
+	// 		setError('ไม่สามารถเข้าถึงกล้องหรือไมค์: ' + err.message);
+	// 		setConnectionStatus('ready');
+	// 	}
+	// };
 	// ฟังก์ชันสร้างรหัสห้อง (เฉพาะ Host)
 	const generateRoomId = () => {
 		const id = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -789,161 +889,155 @@ const PeerJSRoomVideoCall = () => {
 		if (!isInRoom) {
 			return (
 				<>
+					<div className="fixed inset-0 bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center overflow-hidden">
+						<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-7xl mx-auto h-auto max-h-full overflow-y-auto">
 
-					<div className="fixed grid grid-cols-2 gap-6 inset-0 p-6 bg-gradient-to-br from-green-100 to-emerald-100 flex justify-center overflow-hidden">
-						<div className="text-center mb-8">
-							<div className="inline-flex items-center justify-center gap-4 mb-6">
-								<img
-									src="/src/assets/images/icon_logo.svg"
-									alt="KIOSK Telemed Logo"
-									className=" h-48 object-contain"
-								/>
-								<div className="text-left text-emerald-800">
-									<h1 className="text-8xl font-bold mb-2">KIOSK Telemed</h1>
-									<p className="text-2xl ">ระบบสนทนาทางไกลสำหรับบริการทางการแพทย์</p>
+							{/* <div className="text-center mb-8">
+								<div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-700 rounded-full mb-4">
+									<Users className="w-8 h-8 text-white" />
+									
+								</div>
+								<img src="./assets/icon_logo.svg" alt="" />
+								<h1 className="text-3xl font-bold text-gray-800 mb-2">KIOSK Telemed</h1>
+								<p className="text-gray-600">ระบบสนทนาทางไกลสำหรับบริการทางการแพทย์</p>
+							</div> */}
+
+							<div className="text-center mb-8">
+								<div className="inline-flex items-center justify-center gap-4 mb-4">
+									{/* ใช้รูปโลโก้แทนไอคอน เพื่อให้ดูเป็นแบรนด์มากขึ้น */}
+									<img
+										src="/src/assets/images/icon_logo.svg"
+										alt="KIOSK Telemed Logo"
+										className=" h-48 object-contain"
+									/>
+									<div className="text-left text-emerald-700">
+										<h1 className="text-8xl font-bold mb-2">KIOSK Telemed</h1>
+										<p className="text-2xl ">ระบบสนทนาทางไกลสำหรับบริการทางการแพทย์</p>
+									</div>
+
 								</div>
 							</div>
 
-							<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-7xl mx-auto h-160 max-h-full overflow-y-auto">
-								{/* บทบาท + สถานที่ ในบรรทัดเดียวกัน และสูงเท่ากัน */}
-								<div className="mb-8 space-y-10">
-									{/* บทบาทของคุณ */}
-									<div className="flex flex-col">
-										<label className="block text-2xl font-medium text-gray-700 mb-6 text-left">
-											บทบาทของคุณ
-										</label>
+							{/* บทบาท + สถานที่ ในบรรทัดเดียวกัน และสูงเท่ากัน */}
+							<div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+								{/* บทบาทของคุณ */}
+								<div className="flex flex-col">
+									<label className="block text-2xl font-medium text-gray-700 mb-2 text-left">
+										บทบาทของคุณ
+									</label>
 
-										{/* Wrapper ที่มี relative เพื่อให้ dropdown menu วางตำแหน่งถูก */}
-										<div className="relative">
-											<button
-												type="button"
-												onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-												className="w-full px-6 py-6 bg-white border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-shadow hover:shadow-md flex items-center justify-between text-left"
-											>
-												<div className="flex items-center gap-6 text-4xl">
-													{userRole === 'host' ? (
-														<>
-															<Crown className="w-16 h-16 text-yellow-600" />
-															<span className="font-medium">Host (ผู้ดูแลห้อง)</span>
-														</>
-													) : (
-														<>
-															<User className="w-16 h-16 text-emerald-600" />
-															<span className="font-medium">Client (ผู้เข้าร่วมห้อง)</span>
-														</>
-													)}
-												</div>
-												<svg
-													className={`w-12 h-12 text-gray-500 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`}
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
+									{/* Custom Dropdown with Icons */}
+									<div className="relative flex-1">
+										<button
+											type="button"
+											onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+											className="w-full h-full min-h-14 px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition flex items-center justify-between text-left"
+										>
+											<div className="flex items-center gap-3 text-3xl">
+												{userRole === 'host' ? (
+													<>
+														<Crown className="w-8 h-8 text-yellow-600" />
+														<span>Host (ผู้ดูแลห้อง)</span>
+													</>
+												) : (
+													<>
+														<User className="w-8 h-8 text-emerald-600" />
+														<span>Client (ผู้เข้าร่วมห้อง)</span>
+													</>
+												)}
+											</div>
+											<svg className={`w-5 h-5 text-gray-400 transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+											</svg>
+										</button>
+
+										{/* Dropdown Menu */}
+										{isRoleDropdownOpen && (
+											<div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden text-2xl">
+												<button
+													onClick={() => {
+														setUserRole('client');
+														localStorage.setItem('userRole', 'client');
+														setIsRoleDropdownOpen(false);
+													}}
+													className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-indigo-50 transition ${userRole === 'client' ? 'bg-indigo-50' : ''}`}
 												>
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-												</svg>
-											</button>
-
-											{/* Dropdown Menu - วางตำแหน่งถูกต้องด้วย absolute + top-full */}
-											{isRoleDropdownOpen && (
-												<div className="absolute left-0 right-0 top-full mt-3 bg-white border-2 border-gray-160 rounded-xl shadow-2xl overflow-hidden z-50">
-													<button
-														onClick={() => {
-															setUserRole('client');
-															localStorage.setItem('userRole', 'client');
-															setIsRoleDropdownOpen(false);
-														}}
-														className={`w-full px-6 py-6 flex items-center gap-6 text-4xl hover:bg-emerald-50 transition-colors ${userRole === 'client' ? 'bg-emerald-50' : ''}`}
-													>
-														<User className="w-16 h-16 text-emerald-600" />
-														<span className="font-medium">Client (ผู้เข้าร่วมห้อง)</span>
-														{userRole === 'client' && <Check className="w-12 h-12 text-emerald-600 ml-auto" />}
-													</button>
-													<button
-														onClick={() => {
-															setUserRole('host');
-															localStorage.setItem('userRole', 'host');
-															setIsRoleDropdownOpen(false);
-														}}
-														className={`w-full px-6 py-6 flex items-center gap-6 text-4xl hover:bg-yellow-50 transition-colors ${userRole === 'host' ? 'bg-yellow-50' : ''}`}
-													>
-														<Crown className="w-16 h-16 text-yellow-600" />
-														<span className="font-medium">Host (ผู้ดูแลห้อง)</span>
-														{userRole === 'host' && <Check className="w-12 h-12 text-emerald-600 ml-auto" />}
-													</button>
-												</div>
-											)}
-										</div>
+													<User className="w-8 h-8 text-emerald-600" />
+													<span>Client (ผู้เข้าร่วมห้อง)</span>
+													{userRole === 'client' && <Check className="w-5 h-5 text-indigo-600 ml-auto" />}
+												</button>
+												<button
+													onClick={() => {
+														setUserRole('host');
+														localStorage.setItem('userRole', 'host');
+														setIsRoleDropdownOpen(false);
+													}}
+													className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-indigo-50 transition ${userRole === 'host' ? 'bg-indigo-50' : ''}`}
+												>
+													<Crown className="w-8 h-8 text-yellow-600" />
+													<span>Host (ผู้ดูแลห้อง)</span>
+													{userRole === 'host' && <Check className="w-5 h-5 text-indigo-600 ml-auto" />}
+												</button>
+											</div>
+										)}
 									</div>
+								</div>
 
-									{/* สถานที่ปัจจุบัน */}
-									<label className="block text-2xl font-medium text-gray-700 mb-6 text-left">
+								{/* สถานที่ปัจจุบัน */}
+								<div className="flex flex-col">
+									<label className="block text-2xl font-medium text-gray-700 mb-2 text-left">
 										สถานที่ใช้งานปัจจุบัน
 									</label>
 
 									{selectedLocation ? (
-										<div className="h-full min-h-14 p-6 bg-emerald-50 border border-emerald-160 rounded-lg flex items-center justify-between">
-											<div className="flex items-center gap-3 text-4xl">
-												<Building2 className="w-16 h-16 text-emerald-600" />
+										<div className="h-full min-h-14 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
+											<div className="flex items-center gap-3 text-3xl">
+												<Building2 className="w-9 h-9 text-emerald-600" />
 												<p className="font-semibold text-emerald-900">{selectedLocation.name}</p>
 											</div>
 											<button onClick={() => setShowLocationSettings(true)} className="text-emerald-600 hover:text-emerald-800">
-												<Settings className="w-16 h-16" />
+												<Settings className="w-9 h-9" />
 											</button>
 										</div>
 									) : (
-										<div className="h-full min-h-14 p-6 bg-yellow-50 border border-yellow-160 rounded-lg flex flex-row items-center justify-between gap-4 text-center">
-											<p className="text-yellow-800 font-medium text-4xl">ยังไม่ได้เลือกสถานที่</p>
+										<div className="h-full min-h-14 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex flex-col items-center justify-center text-center">
+											<p className="text-yellow-800 font-medium mb-3">ยังไม่ได้เลือกสถานที่</p>
 											<button
 												onClick={() => setShowLocationSettings(true)}
-												className="px-8 py-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-2xl font-medium transition shadow-md"
+												className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition"
 											>
 												ตั้งค่าสถานที่
 											</button>
 										</div>
 									)}
 								</div>
-								{connectionStatus === 'disconnected' && (
-									<div className="bg-amber-50 border border-amber-160 text-amber-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-										<div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-600 border-t-transparent"></div>
-										<span>กำลังเชื่อมต่อ PeerJS Server...</span>
-									</div>
-								)}
-
-								{error && (
-									<div className="bg-red-50 border border-red-160 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-										{error}
-									</div>
-								)}
-
-								{/* ปุ่มย้อนกลับ - มุมบนซ้าย */}
-								<div>
-									<button
-										onClick={() => {
-											console.log('ปิดหน้าต่าง KIOSK Telemed');
-											window.close();
-										}}
-										className="flex items-center gap-4 px-8 py-5 bg-red-500 hover:bg-red-700 text-gray-100 font-bold rounded-2xl shadow-md transition-all duration-300 hover:scale-105 active:scale-95"
-									>
-										<svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-										</svg>
-										<span className="text-3xl">ย้อนกลับ</span>
-									</button>
-								</div>
 							</div>
-						</div>
 
-						<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-7xl mx-auto h-224 overflow-y-auto">
+
+
+							{connectionStatus === 'disconnected' && (
+								<div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+									<div className="animate-spin rounded-full h-4 w-4 border-2 border-amber-600 border-t-transparent"></div>
+									<span>กำลังเชื่อมต่อ PeerJS Server...</span>
+								</div>
+							)}
+
+							{error && (
+								<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+									{error}
+								</div>
+							)}
+
 							{connectionStatus === 'ready' && selectedLocation && (
-								<div className="space-y-10 text-left">
-									<div className="mb-10">
-										<label className="block text-2xl font-medium text-gray-700 mb-6">ชื่อของคุณ</label>
+								<div className="space-y-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-2">ชื่อของคุณ</label>
 										<input
 											type="text"
 											value={userName}
 											onChange={(e) => setUserName(e.target.value)}
 											placeholder="กรอกชื่อของคุณ"
-											className="w-full px-4 py-4 text-6xl border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition"
+											className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition"
 										/>
 									</div>
 
@@ -951,16 +1045,16 @@ const PeerJSRoomVideoCall = () => {
 									{userRole === 'host' && (
 										<>
 											<div>
-												<label className="block text-2xl font-medium text-gray-700 mb-6">รหัสห้อง</label>
+												<label className="block text-sm font-medium text-gray-700 mb-2">รหัสห้อง</label>
 												<div className="flex gap-2">
 													<input
 														type="text"
 														value={roomId}
 														onChange={(e) => setRoomId(e.target.value.toUpperCase())}
 														placeholder="กรอกหรือสร้างรหัส"
-														className="flex-1 px-4 py-3 text-4xl border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono"
+														className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono"
 													/>
-													<button onClick={generateRoomId} className="px-8 py-6 text-4xl bg-emerald-100 hover:bg-emerald-160 text-emerald-700 rounded-lg font-medium">
+													<button onClick={generateRoomId} className="px-4 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg font-medium">
 														สร้าง
 													</button>
 												</div>
@@ -968,9 +1062,9 @@ const PeerJSRoomVideoCall = () => {
 											<button
 												onClick={() => joinOrCreateRoom()}
 												disabled={!roomId || connectionStatus === 'connecting'}
-												className="w-full text-4xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
+												className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
 											>
-												<Crown className="w-16 h-16" />
+												<Crown className="w-5 h-5" />
 												สร้างและเปิดห้อง
 											</button>
 										</>
@@ -980,26 +1074,26 @@ const PeerJSRoomVideoCall = () => {
 									{userRole === 'client' && (
 										<>
 											<div>
-												<label className="block text-2xl font-medium text-gray-700 mb-6">ห้องที่เปิดอยู่</label>
+												<label className="block text-sm font-medium text-gray-700 mb-3">ห้องที่เปิดอยู่</label>
 												{loadingRooms ? (
 													<p className="text-center text-gray-500 py-4">กำลังโหลดห้อง...</p>
 												) : availableRooms.length === 0 ? (
-													<div className="text-center text-4xl py-8 bg-gray-50 rounded-lg border border-gray-160">
-														<Users className="w-24 h-24 mx-auto text-gray-400 mb-6" />
+													<div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+														<Users className="w-12 h-12 mx-auto text-gray-400 mb-3" />
 														<p className="text-gray-600">ยังไม่มีห้องที่เปิดอยู่ในสถานที่นี้</p>
-														<p className="text-xl text-gray-500 mt-4">กรุณารอเจ้าหน้าที่สร้างห้อง</p>
+														<p className="text-sm text-gray-500 mt-2">กรุณารอเจ้าหน้าที่สร้างห้อง</p>
 													</div>
 												) : (
-													<div className="space-y-6 max-h-[60vh] overflow-y-auto bg-gray-50 p-4 rounded-lg ">
+													<div className="space-y-3 max-h-64 overflow-y-auto">
 														{availableRooms.map((room) => (
 															<button
 																key={room.roomId}
 																onClick={() => joinOrCreateRoom(room.roomId)}
-																className="w-full text-6xl p-6 bg-white hover:bg-emerald-50 border border-gray-300 rounded-lg text-left transition shadow-sm flex items-center justify-between group"
+																className="w-full p-4 bg-white hover:bg-emerald-50 border border-gray-300 rounded-lg text-left transition shadow-sm flex items-center justify-between group"
 															>
 																<div>
-																	<p className="font-semibold text-gray-900 group-hover:text-emerald-700 mb-6">{room.roomId}</p>
-																	<p className="text-4xl text-gray-500">สร้างเมื่อ {new Date(room.createdAt).toLocaleString('th-TH')}</p>
+																	<p className="font-semibold text-gray-900 group-hover:text-emerald-700">{room.roomId}</p>
+																	<p className="text-sm text-gray-500">สร้างเมื่อ {new Date(room.createdAt).toLocaleString('th-TH')}</p>
 																</div>
 																<span className="text-emerald-600 font-medium">เข้าร่วม →</span>
 															</button>
@@ -1012,7 +1106,7 @@ const PeerJSRoomVideoCall = () => {
 								</div>
 							)}
 
-							<div className="mt-6 text-center text-2xl text-gray-500">
+							<div className="mt-6 text-center text-xs text-gray-500">
 								<p>ระบบจะบันทึกบทบาทและสถานที่ที่เลือกไว้ในเครื่องของผู้ใช้โดยอัตโนมัติ</p>
 							</div>
 						</div>

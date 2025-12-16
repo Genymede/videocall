@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import PeerJSRoomVideoCall from './videocall.jsx'
-import LocationSettings from './lcoationSettings.jsx'
+import LocationSettings from './LocationSettings.jsx'
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
